@@ -9,6 +9,6 @@
 
 namespace Catalogue {
     namespace GetRequest {
-        void GetRequest(TransportCatalogue &catalog, std::istream& input = std::cin);
+        void GetRequest(TransportCatalogue &catalog, std::ostream& out = std::cout, std::istream& input = std::cin);
     }
 }

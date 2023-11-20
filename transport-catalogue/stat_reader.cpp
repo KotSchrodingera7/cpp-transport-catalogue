@@ -21,7 +21,7 @@ namespace Catalogue {
         }
 
 
-        void ParseNumberBus(std::string_view line, TransportCatalogue &catalog) {
+        void ParseNumberBus(std::string_view line, TransportCatalogue &catalog, std::ostream& out) {
             std::string_view number_bus_ = EraseEmptySymbol(line);
 
             auto addr_bus = catalog.GetBusInfo(number_bus_);
@@ -50,7 +50,7 @@ namespace Catalogue {
 
                 }
 
-                std::cout << "Bus " << number_bus_ 
+                out << "Bus " << number_bus_ 
                             << ": " << count_stops 
                             << " stops on route, " 
                             << count_unique_stop 
@@ -65,49 +65,49 @@ namespace Catalogue {
             }
 
 
-            std::cout << "Bus " << number_bus_ << ": not found" << std::endl;
+            out << "Bus " << number_bus_ << ": not found" << std::endl;
         }
 
-        static void ParseStop(std::string_view line, TransportCatalogue &catalog) {
+        static void ParseStop(std::string_view line, TransportCatalogue &catalog, std::ostream& out) {
             std::string_view stop_ = EraseEmptySymbol(line);
 
             if( catalog.FindStop(stop_) == nullptr) {
-                std::cout << "Stop " << stop_ << ": not found" << std::endl;
+                out << "Stop " << stop_ << ": not found" << std::endl;
                 return;
             }
 
             auto number_buses_on_stop = catalog.GetBusesOnStop(stop_);
 
             if( number_buses_on_stop.size() ) {
-                std::cout << "Stop " << stop_ << ": buses ";
+                out << "Stop " << stop_ << ": buses ";
 
                 for( const auto name_bus_ : number_buses_on_stop ) {
-                    std::cout << name_bus_ << " ";
+                    out << name_bus_ << " ";
                 }
-                std::cout << std::endl;
+                out << std::endl;
             } else {
-                std::cout << "Stop " << stop_ << ": no buses" << std::endl;
+                out << "Stop " << stop_ << ": no buses" << std::endl;
             }
 
             
         }
 
-        void ParseRequest(std::string_view line, TransportCatalogue &catalog) {
+        void ParseRequest(std::string_view line, TransportCatalogue &catalog, std::ostream& out) {
             size_t pos = EraseEmptySymbol(line).find(' ');
 
             std::string request = std::string(line.substr(0, pos));
             line.remove_prefix(pos + 1);
 
             if( request == "Bus" ) {
-                ParseNumberBus(line, catalog);
+                ParseNumberBus(line, catalog, out);
             } else if( request == "Stop" ) {
-                ParseStop(line, catalog);
+                ParseStop(line, catalog, out);
             }
 
         }
 
 
-        void GetRequest(TransportCatalogue &catalog, std::istream& input) {
+        void GetRequest(TransportCatalogue &catalog, std::ostream& out, std::istream& input) {
             int count_line = 0;
 
             std::vector<std::vector<std::string>> result;
@@ -123,7 +123,7 @@ namespace Catalogue {
             }
 
             for(const auto &line : parse_ ) {
-                ParseRequest(line, catalog);
+                ParseRequest(line, catalog, out);
             }
 
         }
