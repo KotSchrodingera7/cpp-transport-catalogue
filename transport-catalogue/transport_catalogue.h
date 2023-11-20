@@ -9,21 +9,21 @@
 #include <unordered_set>
 #include <set>
 #include <vector>
+#include <memory>
 
 #include "geo.h"
-
-
 
 namespace Catalogue {
     struct TStop {
         std::string name;
-        Geo::Coordinates xy;
+        geo::Coordinates xy;
     };
 
     struct TBus {
         std::string name;
         std::vector<const struct TStop*> way;
         std::unordered_set<std::string_view> unique_stop;
+        std::vector<std::string> endpoint;
         bool circle;
     };
 
@@ -46,14 +46,16 @@ namespace Catalogue {
         ~TransportCatalogue() {}
 
         void AddStop(const struct TStop &stop);
-        const TStop *FindStop(const std::string_view name);
+        const TStop *FindStop(const std::string_view name) const;
         void AddBus(const struct TBus &bus);
-        const TBus *GetBusInfo(std::string_view number_bus);
+        const TBus *GetBusInfo(std::string_view number_bus) const;
 
         void LinkStopWithBuses(std::string_view stop, std::string_view bus);
         void AddDistance(const TStop *stop1, const TStop *stop2, double distance);
-        const double GetDistance(const TStop *stop1, const TStop *stop2);
+        double GetDistance(const TStop *stop1, const TStop *stop2) const;
         const std::set<std::string> GetBusesOnStop(std::string_view stop);
+
+        const std::unique_ptr<const std::deque<struct TBus>> GetAllBus() const;
     private:
 
         std::unordered_map<std::string_view, struct TStop *> stopname_to_stop_;
