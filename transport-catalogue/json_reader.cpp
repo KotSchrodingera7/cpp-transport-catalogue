@@ -1,5 +1,6 @@
 #include "json_reader.h"
 
+#include "json_builder.h"
 #include "domain.h"
 /*
  * Здесь можно разместить код наполнения транспортного справочника данными из JSON,
@@ -73,35 +74,36 @@ void JsonReader::ParseStatRequest(const json::Node &node) {
         if( map.at("type").AsType<std::string>() == "Stop" ) {
             auto stop_ = map.at("name").AsType<std::string>();
             if( catalog_.FindStop(stop_) == nullptr ) {
-                arr_.emplace_back(json::Dict{
-                    {"request_id", id},
-                    {"error_message", std::string{"not found"}}
-                });
+                arr_.emplace_back(json::Builder{}.StartDict()
+                                    .Key("request_id").Value(id)
+                                    .Key("error_message").Value("not found")
+                                    .EndDict().Build()
+                    );
             } else {
                 auto number_buses_on_stop = catalog_.GetBusesOnStop(stop_);
 
-                arr_.emplace_back(json::Dict{
-                    {"buses", json::Array(number_buses_on_stop.begin(), number_buses_on_stop.end()) },
-                    {"request_id", id}
-                });
+                arr_.emplace_back(json::Builder{}.StartDict()
+                                    .Key("buses").Value(json::Array(number_buses_on_stop.begin(), number_buses_on_stop.end()))
+                                    .Key("request_id").Value(id)
+                                .EndDict().Build());
             }
         } else if ( map.at("type").AsType<std::string>() == "Bus" ) {
             auto bus = map.at("name").AsType<std::string>();
             auto stat = request_handler_.GetBusStat(bus);
 
             if( stat ) {
-                arr_.emplace_back(json::Dict{
-                    {"request_id", id},
-                    {"curvature", (*stat).corvature},
-                    {"route_length", (*stat).route_length},
-                    {"stop_count", (*stat).stop_count},
-                    {"unique_stop_count", (*stat).unique_stop}
-                });
+                arr_.emplace_back(json::Builder{}.StartDict()
+                        .Key("request_id").Value(id)
+                        .Key("curvature").Value((*stat).corvature)
+                        .Key("route_length").Value((*stat).route_length)
+                        .Key("stop_count").Value((*stat).stop_count)
+                        .Key("unique_stop_count").Value((*stat).unique_stop)
+                    .EndDict().Build());
             } else {
-                arr_.emplace_back(json::Dict{
-                    {"request_id", id},
-                    {"error_message", std::string{"not found"}}
-                });
+                arr_.emplace_back(json::Builder{}.StartDict()
+                                    .Key("request_id").Value(id)
+                                    .Key("error_message").Value("not found")
+                                    .EndDict().Build());
             }
 
         } else if( map.at("type").AsType<std::string>() == "Map" ) {
@@ -109,10 +111,10 @@ void JsonReader::ParseStatRequest(const json::Node &node) {
             auto doc_ = request_handler_.RenderMap();
             doc_.Render(out);
 
-            arr_.emplace_back(json::Dict{
-                    {"map", out.str()},
-                    {"request_id", id}
-                });
+            arr_.emplace_back(json::Builder{}.StartDict()
+                        .Key("map").Value(out.str())
+                        .Key("request_id").Value(id)
+                    .EndDict().Build());
         }
     }
     

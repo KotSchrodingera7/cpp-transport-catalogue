@@ -3,52 +3,31 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <vector>
 #include <variant>
-#include <algorithm>
+#include <vector>
 
 namespace json {
 
 class Node;
-// Сохраните объявления Dict и Array без изменения
 using Dict = std::map<std::string, Node>;
 using Array = std::vector<Node>;
 
-using Value = std::variant<std::nullptr_t, Array, Dict, int, double, std::string, bool>;
-
-// Эта ошибка должна выбрасываться при ошибках парсинга JSON
 class ParsingError : public std::runtime_error {
 public:
     using runtime_error::runtime_error;
 };
 
-using namespace std::literals;
-
-std::ostream& operator<<(std::ostream &out, const Value &value);
-
-
-class Node {
+class Node final
+    : private std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string> {
 public:
-   /* Реализуйте Node, используя std::variant */
-
-    Node(const Value value) : value_(std::move(value)) {};
-    Node() = default;// : value_(std::nullptr_t{}) {};
-    Node(int value) : value_(value) {};
-    Node(double value) : value_(value) {};
-    Node(Array value) : value_(value) {};
-    Node(bool value) : value_(value) {};
-    Node(std::string value) : value_(value) {};
-    Node(Dict value) : value_(value) {};
-    Node(std::nullptr_t value) : value_(value) {};
-    
-    const Value& GetValue() const { return value_; }
-
+    using variant::variant;
+    using Value = variant;
 template<typename Type>
 bool IsType() const {
     if constexpr (std::is_same_v<Type, double>) {
-        return std::holds_alternative<Type>(value_) || std::holds_alternative<int>(value_);
+        return std::holds_alternative<Type>(*this) || std::holds_alternative<int>(*this);
     } 
-    return std::holds_alternative<Type>(value_);
+    return std::holds_alternative<Type>(*this);
 }
 
 template<typename Type> 
@@ -58,56 +37,56 @@ const Type AsType() const {
     }
     if constexpr (std::is_same_v<Type, double>) {
         if( IsType<int>() ) {
-            return static_cast<double>(std::get<int>(value_));
+            return static_cast<double>(std::get<int>(*this));
         }
     }
-    return std::get<Type>(value_);
+    return std::get<Type>(*this);
 }
     bool IsPureDouble() const {
-        return std::holds_alternative<double>(value_);
+        return std::holds_alternative<double>(*this);
     }    
-private:
-    Value value_;
+
+    bool operator==(const Node& rhs) const {
+        return GetValue() == rhs.GetValue();
+    }
+
+    const Value& GetValue() const {
+        return *this;
+    }
+
+    Value& GetValue() {
+        return *this;
+    }
 };
+
+inline bool operator!=(const Node& lhs, const Node& rhs) {
+    return !(lhs == rhs);
+}
 
 class Document {
 public:
-    explicit Document(Node root);
+    explicit Document(Node root)
+        : root_(std::move(root)) {
+    }
 
-    const Node& GetRoot() const;
+    const Node& GetRoot() const {
+        return root_;
+    }
 
 private:
     Node root_;
 };
 
+inline bool operator==(const Document& lhs, const Document& rhs) {
+    return lhs.GetRoot() == rhs.GetRoot();
+}
+
+inline bool operator!=(const Document& lhs, const Document& rhs) {
+    return !(lhs == rhs);
+}
+
 Document Load(std::istream& input);
 
 void Print(const Document& doc, std::ostream& output);
-
-struct PrintContext {
-    std::ostream& out;
-    int indent_step = 4;
-    int indent = 0;
-
-    void PrintIndent() const {
-        for (int i = 0; i < indent; ++i) {
-            out.put(' ');
-        }
-    }
-
-    // Возвращает новый контекст вывода с увеличенным смещением
-    PrintContext Indented() const {
-        return {out, indent_step, indent_step + indent};
-    }
-};
-
-
-void PrintValue(std::nullptr_t, const PrintContext& ctx);
-void PrintValue(Dict dict, const PrintContext& ctx);
-void PrintValue(double number, const PrintContext& ctx);
-void PrintValue(int number, const PrintContext& ctx);
-void PrintValue(std::string str, const PrintContext& ctx);
-void PrintValue(bool value, const PrintContext& ctx);
-void PrintValue(Array array, const PrintContext& ctx);
 
 }  // namespace json
