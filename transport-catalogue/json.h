@@ -44,25 +44,25 @@ public:
     const Value& GetValue() const { return value_; }
 
 template<typename Type>
-    bool IsType() const {
-        if constexpr (std::is_same_v<Type, double>) {
-            return std::holds_alternative<Type>(value_) || std::holds_alternative<int>(value_);
-        } 
-        return std::holds_alternative<Type>(value_);
-    }
+bool IsType() const {
+    if constexpr (std::is_same_v<Type, double>) {
+        return std::holds_alternative<Type>(value_) || std::holds_alternative<int>(value_);
+    } 
+    return std::holds_alternative<Type>(value_);
+}
 
 template<typename Type> 
-    const Type AsType() const {
-        if( !IsType<Type>() ) {
-            throw std::logic_error("");
-        }
-        if constexpr (std::is_same_v<Type, double>) {
-            if( IsType<int>() ) {
-                return static_cast<double>(std::get<int>(value_));
-            }
-        }
-        return std::get<Type>(value_);
+const Type AsType() const {
+    if( !IsType<Type>() ) {
+        throw std::logic_error("");
     }
+    if constexpr (std::is_same_v<Type, double>) {
+        if( IsType<int>() ) {
+            return static_cast<double>(std::get<int>(value_));
+        }
+    }
+    return std::get<Type>(value_);
+}
     bool IsPureDouble() const {
         return std::holds_alternative<double>(value_);
     }    

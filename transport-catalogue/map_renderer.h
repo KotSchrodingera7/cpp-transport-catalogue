@@ -32,13 +32,17 @@
   ]
 } */
 #include "svg.h"
+#include "geo.h"
+#include "transport_catalogue.h"
 #include <variant>
 #include <map>
+#include "json.h"
+
 
 namespace renderer {
     using Setting = std::variant<double, int, svg::Color, svg::Point, std::vector<std::string>>;
 
-    struct MapRenderer {
+    struct RenderSetting {
         double width;
         double height;
         double padding;  
@@ -56,6 +60,29 @@ namespace renderer {
         double underlayer_width;
 
         std::vector<svg::Color> color_palete;
+    };
+
+    class MapRenderer {
+	public:
+		MapRenderer( const Catalogue::TransportCatalogue& db) : db_(db) {};
+		svg::Document RenderMap(const std::map<std::string, std::vector<geo::Coordinates>> &xys) const;
+
+	public:
+		RenderSetting render_setting_;
+
+	private:
+		void RenderPolyline(const std::map<std::string, std::vector<geo::Coordinates>> &xys, 
+							svg::Document &doc, 
+							const SphereProjector &proj) const;
+		void RenderTextBus(const std::map<std::string, std::vector<geo::Coordinates>> &xys, 
+							svg::Document &doc, 
+							const SphereProjector &proj) const;
+		void RenderTextStop(svg::Document &doc, 
+							const SphereProjector &proj) const;
+
+	private:
+		const Catalogue::TransportCatalogue& db_;
+		
     };
 }
 

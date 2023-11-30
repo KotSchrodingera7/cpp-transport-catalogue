@@ -13,8 +13,9 @@ int main() {
      */
 
     using namespace Catalogue;
-
+    using namespace renderer;
     TransportCatalogue catalog;
-    JsonReader reader_(catalog);
+    MapRenderer map_renderer(catalog);
+    JsonReader reader_(catalog, map_renderer);
     reader_.CreateCatalogFromJson();
 }   

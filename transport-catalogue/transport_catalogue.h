@@ -12,32 +12,9 @@
 #include <memory>
 
 #include "geo.h"
+#include "domain.h"
 
 namespace Catalogue {
-    struct TStop {
-        std::string name;
-        geo::Coordinates xy;
-    };
-
-    struct TBus {
-        std::string name;
-        std::vector<const struct TStop*> way;
-        std::unordered_set<std::string_view> unique_stop;
-        std::vector<std::string> endpoint;
-        bool circle;
-    };
-
-    struct PairHash {
-
-        size_t operator() (const std::pair<const TStop*,const TStop* > &pair) const {
-            size_t h1 = v_hasher_(pair.first);
-            size_t h2 = v_hasher_(pair.second);
-            return h1 ^ (h2 << 1);
-
-        }
-        private:
-            std::hash<const void *> v_hasher_;
-    };
 
     class TransportCatalogue {
 

@@ -13,18 +13,23 @@
 
 class JsonReader {
 public:
-    JsonReader(Catalogue::TransportCatalogue &catalog) : catalog_(catalog), request_handler_(catalog_, render_setting_) {}
+    JsonReader(Catalogue::TransportCatalogue &catalog, renderer::MapRenderer &map_renderer) : 
+                                            catalog_(catalog), 
+                                            map_renderer_(map_renderer),
+                                            request_handler_(catalog_, map_renderer)
+                                            {}
 
     void CreateCatalogFromJson(std::istream& input = std::cin);
     void CreateJSONFromCatalog(void);
 
 private:
-    void ParseBaseRequest(json::Node node, bool check_distance = false);
-    void ParseStatRequest(json::Node node);
-    void ParseRenderRequest(json::Node node);
+    void ParseBaseRequest(const json::Node &node, bool check_distance = false);
+    void ParseStatRequest(const json::Node &node);
+    void ParseRenderRequest(const json::Node &node);
 private:
     Catalogue::TransportCatalogue &catalog_;
+    renderer::MapRenderer &map_renderer_;
     json::Node return_node_;
     RequestHandler request_handler_;
-    renderer::MapRenderer render_setting_;
+    
 };
