@@ -8,7 +8,6 @@ namespace json {
         class BaseContext;
         class DictValueContext;
         class DictItemContext;
-        class ValueContext;
         class ArrayItemContext;
 
         public:
