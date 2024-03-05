@@ -33,6 +33,7 @@ namespace Catalogue {
         const std::set<std::string> GetBusesOnStop(std::string_view stop);
 
         const std::unique_ptr<const std::deque<struct TBus>> GetAllBus() const;
+        const std::unique_ptr<const std::deque<struct TStop>> GetAllStop() const;
     private:
 
         std::unordered_map<std::string_view, struct TStop *> stopname_to_stop_;

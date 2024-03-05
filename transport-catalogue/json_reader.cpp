@@ -70,8 +70,8 @@ void JsonReader::ParseStatRequest(const json::Node &node) {
     for( const auto &req: node.AsType<json::Array>() ) {
         auto map = req.AsType<json::Dict>();
         int id = map.at("id").AsType<int>();
-
-        if( map.at("type").AsType<std::string>() == "Stop" ) {
+        auto type_req = map.at("type");
+        if( type_req.AsType<std::string>() == "Stop" ) {
             auto stop_ = map.at("name").AsType<std::string>();
             if( catalog_.FindStop(stop_) == nullptr ) {
                 arr_.emplace_back(json::Builder{}.StartDict()
@@ -87,7 +87,7 @@ void JsonReader::ParseStatRequest(const json::Node &node) {
                                     .Key("request_id").Value(id)
                                 .EndDict().Build());
             }
-        } else if ( map.at("type").AsType<std::string>() == "Bus" ) {
+        } else if ( type_req.AsType<std::string>() == "Bus" ) {
             auto bus = map.at("name").AsType<std::string>();
             auto stat = request_handler_.GetBusStat(bus);
 
@@ -106,7 +106,7 @@ void JsonReader::ParseStatRequest(const json::Node &node) {
                                     .EndDict().Build());
             }
 
-        } else if( map.at("type").AsType<std::string>() == "Map" ) {
+        } else if( type_req.AsType<std::string>() == "Map" ) {
             std::ostringstream out;
             auto doc_ = request_handler_.RenderMap();
             doc_.Render(out);
@@ -115,6 +115,41 @@ void JsonReader::ParseStatRequest(const json::Node &node) {
                         .Key("map").Value(out.str())
                         .Key("request_id").Value(id)
                     .EndDict().Build());
+        } else if( type_req.AsType<std::string>() == "Route") {
+            auto data_result = route_.GetWeigth(map.at("from").AsType<std::string>(), map.at("to").AsType<std::string>());
+            
+
+            if( data_result ) {
+                json::Array array_route;
+                for(const auto &data: (*data_result).id_stops) {
+                    if( data.type == "wait" ) {
+                        array_route.emplace_back(json::Builder{}.StartDict()
+                                        .Key("stop_name").Value(data.stop_name.value())
+                                        .Key("time").Value(data.weight)
+                                        .Key("type").Value("Wait")
+                                        .EndDict().Build());
+                    } else if( data.type == "bus") {
+                        array_route.emplace_back(json::Builder{}.StartDict()
+                                        .Key("bus").Value(data.bus_name.value())
+                                        .Key("span_count").Value(data.count)
+                                        .Key("time").Value(data.weight)
+                                        .Key("type").Value("Bus")
+                                        .EndDict().Build());
+                    }
+                }
+
+                arr_.emplace_back(json::Builder{}.StartDict()
+                                    .Key("request_id").Value(id)
+                                    .Key("total_time").Value((*data_result).weight)
+                                    .Key("items").Value(array_route)
+                                    .EndDict().Build());
+            } else {
+
+                arr_.emplace_back(json::Builder{}.StartDict()
+                                    .Key("request_id").Value(id)
+                                    .Key("error_message").Value("not found")
+                                    .EndDict().Build());
+            }
         }
     }
     
@@ -186,6 +221,19 @@ void JsonReader::ParseRenderRequest(const json::Node &node) {
     }
 }
 
+void JsonReader::ParseRoutingSetting(const json::Node &node) {
+    auto map_ = node.AsType<json::Dict>();
+    if( map_.count("bus_wait_time") ) {
+        route_.WaitTime( map_.at("bus_wait_time").AsType<int>() );
+    }
+
+    if( map_.count("bus_velocity") ) {
+        route_.SetSpeed(map_.at("bus_velocity").AsType<int>());
+    }
+
+    route_.CreateGraph();
+}
+
 void JsonReader::CreateCatalogFromJson(std::istream& input) {
 
     json::Document json_input_ = json::Load(input);
@@ -204,6 +252,10 @@ void JsonReader::CreateCatalogFromJson(std::istream& input) {
             ParseRenderRequest(map_.at("render_settings"));
         }
         
+        if( map_.count("routing_settings") ) {
+            ParseRoutingSetting(map_.at("routing_settings"));
+        }
+
         if( map_.count("stat_requests") ) {
             ParseStatRequest(map_.at("stat_requests"));
         }

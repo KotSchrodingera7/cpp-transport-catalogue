@@ -68,4 +68,8 @@ namespace Catalogue {
     const std::unique_ptr<const std::deque<struct TBus>> TransportCatalogue::GetAllBus() const {
         return std::make_unique<const std::deque<struct TBus>>(buses_);
     }
+
+    const std::unique_ptr<const std::deque<struct TStop>> TransportCatalogue::GetAllStop() const {
+        return std::make_unique<const std::deque<struct TStop>>(stops_);
+    }
 }

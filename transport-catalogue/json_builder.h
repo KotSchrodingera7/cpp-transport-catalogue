@@ -88,7 +88,6 @@ namespace json {
                 public:
                     DictItemContext(BaseContext base)
                         : BaseContext(base) {}
-                    ValueContext Value(Node::Value value) = delete;
                     DictItemContext StartDict() = delete;
                     ArrayItemContext StartArray() = delete;
                     Builder &EndArray() = delete;

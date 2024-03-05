@@ -39,6 +39,7 @@ Node LoadDict(std::istream& input) {
     for (char c; input >> c && c != '}';) {
         if (c == '"') {
             std::string key = LoadString(input).AsType<std::string>();
+
             if (input >> c && c == ':') {
                 if (dict.find(key) != dict.end()) {
                     throw ParsingError("Duplicate key '"s + key + "' have been found");

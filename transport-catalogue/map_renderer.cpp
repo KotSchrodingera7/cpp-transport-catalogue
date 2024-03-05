@@ -52,7 +52,7 @@ void MapRenderer::RenderTextBus(const std::map<std::string, std::vector<geo::Coo
     int i = 0;
     for( auto &[name, geo_coord] : xys) {
         const auto bus_info_ = db_.GetBusInfo(name);
-        for( const auto stop_name : bus_info_->endpoint ) {
+        for( const auto &stop_name : bus_info_->endpoint ) {
             const svg::Point screen_coord = proj(db_.FindStop(stop_name)->xy);
             svg::Text text_;
             svg::Text text_new;
